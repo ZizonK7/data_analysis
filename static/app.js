@@ -16,28 +16,28 @@ let players = [];
 let searchTimer = null;
 
 const METRICS = [
-  ["avg_rating", "평균 평점", "raw", false],
-  ["goal_contributions_p90", "공격포인트/90", "per90", false],
-  ["expected_goal_contributions_p90", "xG+xA/90", "per90", false],
-  ["expected_assists_p90", "xA/90", "per90", false],
-  ["key_passes_p90", "키패스/90", "per90", false],
-  ["big_chances_created_p90", "빅찬스 생성/90", "per90", false],
-  ["accurate_crosses_p90", "정확한 크로스/90", "per90", false],
-  ["cross_accuracy", "크로스 성공률", "percent", false],
-  ["accurate_long_balls_p90", "정확한 롱볼/90", "per90", false],
-  ["long_ball_accuracy", "롱볼 성공률", "percent", false],
-  ["successful_dribbles_p90", "성공 드리블/90", "per90", false],
-  ["dribble_success_rate", "드리블 성공률", "percent", false],
-  ["total_passes_p90", "패스/90", "per90", false],
-  ["pass_accuracy", "패스 성공률", "percent", false],
-  ["total_touches_p90", "터치/90", "per90", false],
-  ["duels_won_p90", "경합 승리/90", "per90", false],
-  ["duel_win_rate", "경합 승률", "percent", false],
-  ["tackles_p90", "태클/90", "per90", false],
-  ["interceptions_p90", "인터셉트/90", "per90", false],
-  ["defensive_actions_p90", "태클+인터셉트/90", "per90", false],
-  ["errors_p90", "실수로 인한 슈팅/골/90", "per90", true],
-  ["fouls_committed_p90", "파울/90", "per90", true],
+  ["avg_rating", "평균 평점", "rating", "raw", false],
+  ["goal_contributions_p90", "공격포인트", "per 90", "per90", false],
+  ["expected_goal_contributions_p90", "xG+xA", "per 90", "per90", false],
+  ["expected_assists_p90", "xA", "per 90", "per90", false],
+  ["key_passes_p90", "키패스", "per 90", "per90", false],
+  ["big_chances_created_p90", "빅찬스 생성", "per 90", "per90", false],
+  ["accurate_crosses_p90", "정확한 크로스", "per 90", "per90", false],
+  ["cross_accuracy", "크로스 성공률", "%", "percent", false],
+  ["accurate_long_balls_p90", "정확한 롱볼", "per 90", "per90", false],
+  ["long_ball_accuracy", "롱볼 성공률", "%", "percent", false],
+  ["successful_dribbles_p90", "성공 드리블", "per 90", "per90", false],
+  ["dribble_success_rate", "드리블 성공률", "%", "percent", false],
+  ["total_passes_p90", "패스", "per 90", "per90", false],
+  ["pass_accuracy", "패스 성공률", "%", "percent", false],
+  ["total_touches_p90", "터치", "per 90", "per90", false],
+  ["duels_won_p90", "경합 승리", "per 90", "per90", false],
+  ["duel_win_rate", "경합 승률", "%", "percent", false],
+  ["tackles_p90", "태클", "per 90", "per90", false],
+  ["interceptions_p90", "인터셉트", "per 90", "per90", false],
+  ["defensive_actions_p90", "태클+인터셉트", "per 90", "per90", false],
+  ["errors_p90", "실수로 인한 슈팅/골", "per 90", "per90", true],
+  ["fouls_committed_p90", "파울", "per 90", "per90", true],
 ];
 
 const ATTACKING = [
@@ -262,7 +262,7 @@ function comparisonPool(player, minMinutes) {
 }
 
 function buildStrengths(pool, player) {
-  return METRICS.map(([column, label, type, lowerIsBetter]) => {
+  return METRICS.map(([column, label, unit, type, lowerIsBetter]) => {
     const value = player[column];
     if (!isValidNumber(value)) return null;
     if (!lowerIsBetter && type !== "raw" && Number(value) <= 0) return null;
@@ -274,11 +274,12 @@ function buildStrengths(pool, player) {
     if (percentile === null || rank === null || percentile < 70) return null;
     return {
       label,
+      unit,
       value: formatValue(value, type),
       percentile,
-      percentileText: `좋은 쪽 상위 ${(100 - percentile).toFixed(1)}%`,
+      percentileText: `상위 ${(100 - percentile).toFixed(1)}%`,
       rankText: `${rank}/${validValues.length}`,
-      directionText: lowerIsBetter ? "낮을수록 좋음" : "높을수록 좋음",
+      metaText: `${unit} · ${rank}/${validValues.length}`,
       raw: Number(value),
     };
   })
@@ -287,7 +288,7 @@ function buildStrengths(pool, player) {
 }
 
 function buildWeaknesses(pool, player) {
-  return METRICS.map(([column, label, type, lowerIsBetter]) => {
+  return METRICS.map(([column, label, unit, type, lowerIsBetter]) => {
     const value = player[column];
     if (!isValidNumber(value)) return null;
 
@@ -299,11 +300,12 @@ function buildWeaknesses(pool, player) {
 
     return {
       label,
+      unit,
       value: formatValue(value, type),
       percentile,
-      percentileText: `좋은 쪽 하위 ${percentile.toFixed(1)}%`,
+      percentileText: `하위 ${percentile.toFixed(1)}%`,
       rankText: `${rank}/${validValues.length}`,
-      directionText: lowerIsBetter ? "낮을수록 좋음" : "높을수록 좋음",
+      metaText: `${unit} · ${rank}/${validValues.length}`,
       raw: Number(value),
     };
   })
@@ -372,10 +374,9 @@ function metricCards(items, emptyText, extraClass = "") {
         .map(
           (item) => `
             <div class="strength-card ${extraClass}">
-              <small>${escapeHtml(item.percentileText)}</small>
+              <span class="metric-title">${escapeHtml(item.label)}</span>
               <strong>${escapeHtml(item.value)}</strong>
-              <span>${escapeHtml(item.label)} · ${escapeHtml(item.rankText)}</span>
-              <em>${escapeHtml(item.directionText)}</em>
+              <small>${escapeHtml(item.metaText)}</small>
             </div>
           `,
         )

@@ -279,10 +279,9 @@ button:hover {
   font-size: 13px;
 }
 
-.strength-card em {
-  color: var(--muted);
-  font-size: 12px;
-  font-style: normal;
+.strength-card .metric-title {
+  color: var(--ink);
+  font-size: 15px;
   font-weight: 800;
 }
 
