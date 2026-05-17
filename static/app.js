@@ -678,7 +678,11 @@ async function init() {
     const text = await response.text();
     players = parseCsv(text).map(enrichPlayer);
     setStatus(`${players.length.toLocaleString()}명의 선수 데이터를 불러왔습니다.`);
-    searchPlayers(queryInput.value);
+    if (queryInput.value.trim()) {
+      analyzeByQuery(queryInput.value);
+    } else {
+      searchPlayers(queryInput.value);
+    }
   } catch (error) {
     renderEmptyReport("player_rows.csv를 찾을 수 없습니다.");
     setStatus(error.message, "error");
