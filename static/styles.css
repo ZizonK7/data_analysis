@@ -351,10 +351,10 @@ button:hover {
 }
 
 .radar-svg {
-  width: min(100%, 280px);
+  width: min(100%, 300px);
   aspect-ratio: 1;
   justify-self: center;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .radar-grid-lines polygon,
@@ -383,7 +383,7 @@ button:hover {
 
 .radar-axis-labels text {
   fill: var(--ink);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0;
 }

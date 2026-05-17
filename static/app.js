@@ -377,7 +377,7 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function radarPoint(index, total, value, radius = 74, center = 120) {
+function radarPoint(index, total, value, radius = 62, center = 130) {
   const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
   const scaledRadius = radius * clamp(value, 0, 100) / 100;
   return {
@@ -386,11 +386,30 @@ function radarPoint(index, total, value, radius = 74, center = 120) {
   };
 }
 
-function radarGridPolygon(total, value, radius = 74, center = 120) {
+function radarGridPolygon(total, value, radius = 62, center = 130) {
   return Array.from({ length: total }, (_, index) => {
     const point = radarPoint(index, total, value, radius, center);
     return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
   }).join(" ");
+}
+
+function wrapRadarLabel(label) {
+  const text = String(label);
+  const words = text.split(" ");
+  if (words.length > 1) {
+    const lines = [];
+    words.forEach((word) => {
+      const last = lines[lines.length - 1];
+      if (last && `${last} ${word}`.length <= 7) {
+        lines[lines.length - 1] = `${last} ${word}`;
+      } else {
+        lines.push(word);
+      }
+    });
+    return lines;
+  }
+  if (text.length <= 6) return [text];
+  return [text.slice(0, 6), text.slice(6)];
 }
 
 function buildRadarItems(pool, player, metrics) {
@@ -414,7 +433,7 @@ function radarChartSvg(items, title) {
   const axes = items
     .map((_, index) => {
       const point = radarPoint(index, total, 100);
-      return `<line x1="120" y1="120" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
+      return `<line x1="130" y1="130" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
     })
     .join("");
   const points = items.map((item, index) => radarPoint(index, total, item.score));
@@ -424,23 +443,30 @@ function radarChartSvg(items, title) {
     .join("");
   const labels = items
     .map((item, index) => {
-      const point = radarPoint(index, total, 100, 106);
+      const point = radarPoint(index, total, 100, 90);
       const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
       const anchor = Math.abs(Math.cos(angle)) < 0.22 ? "middle" : Math.cos(angle) > 0 ? "start" : "end";
-      const baseline = Math.sin(angle) < -0.7 ? "auto" : Math.sin(angle) > 0.7 ? "hanging" : "middle";
+      const lines = wrapRadarLabel(item.label);
+      const firstDy = lines.length > 1 ? -5 : 0;
+      const tspans = lines
+        .map(
+          (line, lineIndex) =>
+            `<tspan x="${point.x.toFixed(1)}" dy="${lineIndex === 0 ? firstDy : 12}">${escapeHtml(line)}</tspan>`,
+        )
+        .join("");
       return `
         <text
           x="${point.x.toFixed(1)}"
           y="${point.y.toFixed(1)}"
           text-anchor="${anchor}"
-          dominant-baseline="${baseline}"
-        >${escapeHtml(item.label)}</text>
+          dominant-baseline="middle"
+        >${tspans}</text>
       `;
     })
     .join("");
 
   return `
-    <svg class="radar-svg" viewBox="0 0 240 240" role="img" aria-label="${escapeHtml(title)} 방사형 그래프">
+    <svg class="radar-svg" viewBox="0 0 260 260" role="img" aria-label="${escapeHtml(title)} 방사형 그래프">
       <g class="radar-grid-lines">${rings}${axes}</g>
       <polygon class="radar-fill" points="${polygon}" />
       <polyline class="radar-stroke" points="${polygon} ${polygon.split(" ")[0]}" />
