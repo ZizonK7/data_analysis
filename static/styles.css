@@ -266,7 +266,7 @@ button:hover {
 }
 
 .strength-card small {
-  color: var(--gold);
+  color: var(--muted);
   font-weight: 800;
 }
 
@@ -280,12 +280,12 @@ button:hover {
 }
 
 .strength-card .metric-title {
-  color: var(--ink);
+  color: var(--gold);
   font-size: 15px;
   font-weight: 800;
 }
 
-.weakness-card small {
+.weakness-card .metric-title {
   color: var(--danger);
 }
 
