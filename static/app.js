@@ -68,6 +68,52 @@ const DEFENSIVE = [
   ["errors_p90", "실수로 인한 슈팅/골/90", "per90"],
 ];
 
+const POSITION_RADARS = [
+  {
+    title: "공격수",
+    metrics: [
+      ["expected_assists_p90", "xA", "per90"],
+      ["big_chances_created_p90", "빅찬스 생성", "per90"],
+      ["successful_dribbles_p90", "성공 드리블", "per90"],
+      ["goal_contributions_p90", "공격포인트", "per90"],
+      ["accurate_crosses_p90", "정확한 크로스", "per90"],
+    ],
+  },
+  {
+    title: "공격형 미드필더",
+    metrics: [
+      ["total_touches_p90", "터치", "per90"],
+      ["pass_accuracy", "패스 성공률", "percent"],
+      ["goal_contributions_p90", "공격포인트", "per90"],
+      ["key_passes_p90", "키패스", "per90"],
+      ["big_chances_created_p90", "빅찬스 생성", "per90"],
+      ["successful_dribbles_p90", "성공 드리블", "per90"],
+    ],
+  },
+  {
+    title: "수비형 미드필더",
+    metrics: [
+      ["total_touches_p90", "터치", "per90"],
+      ["pass_accuracy", "패스 성공률", "percent"],
+      ["accurate_long_balls_p90", "정확한 롱볼", "per90"],
+      ["key_passes_p90", "키패스", "per90"],
+      ["interceptions_p90", "인터셉트", "per90"],
+      ["duels_won_p90", "경합 승리", "per90"],
+    ],
+  },
+  {
+    title: "수비수",
+    metrics: [
+      ["accurate_long_balls_p90", "정확한 롱볼", "per90"],
+      ["pass_accuracy", "패스 성공률", "percent"],
+      ["duels_won_p90", "경합 승리", "per90"],
+      ["fouls_committed_p90", "파울", "per90", true],
+      ["clearances_p90", "클리어런스", "per90"],
+      ["errors_p90", "실수로 인한 슈팅/골", "per90", true],
+    ],
+  },
+];
+
 function setStatus(message, type = "normal") {
   statusEl.textContent = message;
   statusEl.classList.toggle("error", type === "error");
@@ -327,6 +373,104 @@ function metricItems(columns, player) {
   }));
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function radarPoint(index, total, value, radius = 74, center = 100) {
+  const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
+  const scaledRadius = radius * clamp(value, 0, 100) / 100;
+  return {
+    x: center + Math.cos(angle) * scaledRadius,
+    y: center + Math.sin(angle) * scaledRadius,
+  };
+}
+
+function radarGridPolygon(total, value, radius = 74, center = 100) {
+  return Array.from({ length: total }, (_, index) => {
+    const point = radarPoint(index, total, value, radius, center);
+    return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
+  }).join(" ");
+}
+
+function buildRadarItems(pool, player, metrics) {
+  return metrics.map(([column, label, type, lowerIsBetter = false]) => {
+    const values = pool.map((candidate) => candidate[column]);
+    const percentile = percentileFor(values, player[column], lowerIsBetter);
+    return {
+      label,
+      value: formatValue(player[column], type),
+      score: percentile === null ? 0 : percentile,
+      scoreText: percentile === null ? "-" : Math.round(percentile).toString(),
+    };
+  });
+}
+
+function radarChartSvg(items, title) {
+  const total = items.length;
+  const rings = [20, 40, 60, 80, 100]
+    .map((value) => `<polygon points="${radarGridPolygon(total, value)}" />`)
+    .join("");
+  const axes = items
+    .map((_, index) => {
+      const point = radarPoint(index, total, 100);
+      return `<line x1="100" y1="100" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
+    })
+    .join("");
+  const points = items.map((item, index) => radarPoint(index, total, item.score));
+  const polygon = points.map((point) => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(" ");
+  const dots = points
+    .map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3.2" />`)
+    .join("");
+
+  return `
+    <svg class="radar-svg" viewBox="0 0 200 200" role="img" aria-label="${escapeHtml(title)} 방사형 그래프">
+      <g class="radar-grid-lines">${rings}${axes}</g>
+      <polygon class="radar-fill" points="${polygon}" />
+      <polyline class="radar-stroke" points="${polygon} ${polygon.split(" ")[0]}" />
+      <g class="radar-dots">${dots}</g>
+    </svg>
+  `;
+}
+
+function radarLegend(items) {
+  return `
+    <div class="radar-legend">
+      ${items
+        .map(
+          (item) => `
+            <div class="radar-legend-row">
+              <span>${escapeHtml(item.label)}</span>
+              <strong>${escapeHtml(item.scoreText)}</strong>
+              <small>${escapeHtml(item.value)}</small>
+            </div>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function renderRadarCharts(pool, player) {
+  return `
+    <div class="radar-grid">
+      ${POSITION_RADARS.map((radar) => {
+        const items = buildRadarItems(pool, player, radar.metrics);
+        return `
+          <article class="radar-card">
+            <div class="radar-card-header">
+              <h4>${escapeHtml(radar.title)}</h4>
+              <span>percentile</span>
+            </div>
+            ${radarChartSvg(items, radar.title)}
+            ${radarLegend(items)}
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
 function renderCandidates(candidates) {
   candidatesEl.innerHTML = "";
   if (!candidates.length) return;
@@ -425,6 +569,14 @@ function renderReport(player, pool, strengths, weaknesses) {
           <span>좋은 쪽 하위 30% 이내 지표</span>
         </div>
         <div class="strength-grid weakness-grid">${weaknessCards}</div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-header">
+          <h3>포지션별 방사형 그래프</h3>
+          <span>같은 비교군 안에서 각 지표의 백분위 점수</span>
+        </div>
+        ${renderRadarCharts(pool, player)}
       </section>
 
       <section class="section-block">

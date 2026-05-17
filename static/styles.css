@@ -316,6 +316,104 @@ button:hover {
   font-size: 20px;
 }
 
+.radar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1px;
+  background: var(--line);
+}
+
+.radar-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  background: #ffffff;
+}
+
+.radar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.radar-card h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.radar-card-header span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.radar-svg {
+  width: min(100%, 240px);
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+.radar-grid-lines polygon,
+.radar-grid-lines line {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.radar-fill {
+  fill: rgba(15, 139, 111, 0.2);
+}
+
+.radar-stroke {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linejoin: round;
+  stroke-width: 2.8;
+}
+
+.radar-dots circle {
+  fill: var(--accent-strong);
+  stroke: #ffffff;
+  stroke-width: 1.5;
+}
+
+.radar-legend {
+  display: grid;
+  gap: 6px;
+}
+
+.radar-legend-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px 58px;
+  gap: 8px;
+  align-items: center;
+  min-height: 28px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.radar-legend-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.radar-legend-row strong {
+  color: var(--accent-strong);
+  font-size: 14px;
+  text-align: right;
+}
+
+.radar-legend-row small {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+}
+
 .match-table {
   width: 100%;
   border-collapse: collapse;
@@ -376,5 +474,9 @@ button:hover {
 
   .match-table {
     font-size: 13px;
+  }
+
+  .radar-legend-row {
+    grid-template-columns: minmax(0, 1fr) 32px 54px;
   }
 }
