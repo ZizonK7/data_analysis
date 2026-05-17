@@ -377,7 +377,7 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function radarPoint(index, total, value, radius = 74, center = 100) {
+function radarPoint(index, total, value, radius = 74, center = 120) {
   const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
   const scaledRadius = radius * clamp(value, 0, 100) / 100;
   return {
@@ -386,7 +386,7 @@ function radarPoint(index, total, value, radius = 74, center = 100) {
   };
 }
 
-function radarGridPolygon(total, value, radius = 74, center = 100) {
+function radarGridPolygon(total, value, radius = 74, center = 120) {
   return Array.from({ length: total }, (_, index) => {
     const point = radarPoint(index, total, value, radius, center);
     return `${point.x.toFixed(1)},${point.y.toFixed(1)}`;
@@ -414,7 +414,7 @@ function radarChartSvg(items, title) {
   const axes = items
     .map((_, index) => {
       const point = radarPoint(index, total, 100);
-      return `<line x1="100" y1="100" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
+      return `<line x1="120" y1="120" x2="${point.x.toFixed(1)}" y2="${point.y.toFixed(1)}" />`;
     })
     .join("");
   const points = items.map((item, index) => radarPoint(index, total, item.score));
@@ -422,13 +422,30 @@ function radarChartSvg(items, title) {
   const dots = points
     .map((point) => `<circle cx="${point.x.toFixed(1)}" cy="${point.y.toFixed(1)}" r="3.2" />`)
     .join("");
+  const labels = items
+    .map((item, index) => {
+      const point = radarPoint(index, total, 100, 106);
+      const angle = (Math.PI * 2 * index) / total - Math.PI / 2;
+      const anchor = Math.abs(Math.cos(angle)) < 0.22 ? "middle" : Math.cos(angle) > 0 ? "start" : "end";
+      const baseline = Math.sin(angle) < -0.7 ? "auto" : Math.sin(angle) > 0.7 ? "hanging" : "middle";
+      return `
+        <text
+          x="${point.x.toFixed(1)}"
+          y="${point.y.toFixed(1)}"
+          text-anchor="${anchor}"
+          dominant-baseline="${baseline}"
+        >${escapeHtml(item.label)}</text>
+      `;
+    })
+    .join("");
 
   return `
-    <svg class="radar-svg" viewBox="0 0 200 200" role="img" aria-label="${escapeHtml(title)} 방사형 그래프">
+    <svg class="radar-svg" viewBox="0 0 240 240" role="img" aria-label="${escapeHtml(title)} 방사형 그래프">
       <g class="radar-grid-lines">${rings}${axes}</g>
       <polygon class="radar-fill" points="${polygon}" />
       <polyline class="radar-stroke" points="${polygon} ${polygon.split(" ")[0]}" />
       <g class="radar-dots">${dots}</g>
+      <g class="radar-axis-labels">${labels}</g>
     </svg>
   `;
 }

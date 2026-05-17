@@ -351,9 +351,10 @@ button:hover {
 }
 
 .radar-svg {
-  width: min(100%, 240px);
+  width: min(100%, 280px);
   aspect-ratio: 1;
   justify-self: center;
+  overflow: visible;
 }
 
 .radar-grid-lines polygon,
@@ -378,6 +379,13 @@ button:hover {
   fill: var(--accent-strong);
   stroke: #ffffff;
   stroke-width: 1.5;
+}
+
+.radar-axis-labels text {
+  fill: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
 }
 
 .radar-legend {
