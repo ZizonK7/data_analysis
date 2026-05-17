@@ -279,6 +279,21 @@ button:hover {
   font-size: 13px;
 }
 
+.strength-card em {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.weakness-card small {
+  color: var(--danger);
+}
+
+.weakness-card {
+  background: #fffdfb;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));

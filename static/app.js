@@ -276,13 +276,40 @@ function buildStrengths(pool, player) {
       label,
       value: formatValue(value, type),
       percentile,
-      percentileText: `상위 ${(100 - percentile).toFixed(1)}%`,
+      percentileText: `좋은 쪽 상위 ${(100 - percentile).toFixed(1)}%`,
       rankText: `${rank}/${validValues.length}`,
+      directionText: lowerIsBetter ? "낮을수록 좋음" : "높을수록 좋음",
       raw: Number(value),
     };
   })
     .filter(Boolean)
     .sort((a, b) => b.percentile - a.percentile || b.raw - a.raw);
+}
+
+function buildWeaknesses(pool, player) {
+  return METRICS.map(([column, label, type, lowerIsBetter]) => {
+    const value = player[column];
+    if (!isValidNumber(value)) return null;
+
+    const values = pool.map((candidate) => candidate[column]);
+    const validValues = values.filter(isValidNumber);
+    const percentile = percentileFor(validValues, value, lowerIsBetter);
+    const rank = rankFor(validValues, value, lowerIsBetter);
+    if (percentile === null || rank === null || percentile > 30) return null;
+
+    return {
+      label,
+      value: formatValue(value, type),
+      percentile,
+      percentileText: `좋은 쪽 하위 ${percentile.toFixed(1)}%`,
+      rankText: `${rank}/${validValues.length}`,
+      directionText: lowerIsBetter ? "낮을수록 좋음" : "높을수록 좋음",
+      raw: Number(value),
+    };
+  })
+    .filter(Boolean)
+    .sort((a, b) => a.percentile - b.percentile || a.raw - b.raw)
+    .slice(0, 8);
 }
 
 function metricItems(columns, player) {
@@ -339,20 +366,28 @@ function metricGrid(items) {
   `;
 }
 
-function renderReport(player, pool, strengths) {
-  const strengthCards = strengths.length
-    ? strengths
+function metricCards(items, emptyText, extraClass = "") {
+  return items.length
+    ? items
         .map(
           (item) => `
-            <div class="strength-card">
+            <div class="strength-card ${extraClass}">
               <small>${escapeHtml(item.percentileText)}</small>
               <strong>${escapeHtml(item.value)}</strong>
               <span>${escapeHtml(item.label)} · ${escapeHtml(item.rankText)}</span>
+              <em>${escapeHtml(item.directionText)}</em>
             </div>
           `,
         )
         .join("")
-    : `<div class="strength-card"><span>상위권으로 잡힌 지표가 없습니다.</span></div>`;
+    : `<div class="strength-card ${extraClass}"><span>${escapeHtml(emptyText)}</span></div>`;
+}
+
+function renderReport(player, pool, strengths, weaknesses) {
+  const strengthCards = strengths.length
+    ? metricCards(strengths, "상위권으로 잡힌 지표가 없습니다.")
+    : metricCards([], "상위권으로 잡힌 지표가 없습니다.");
+  const weaknessCards = metricCards(weaknesses, "하위권으로 잡힌 지표가 없습니다.", "weakness-card");
 
   reportEl.classList.remove("is-empty");
   reportEl.innerHTML = `
@@ -375,6 +410,14 @@ function renderReport(player, pool, strengths) {
           <span>같은 시즌/대회/포지션, ${Number(minutesInput.value).toLocaleString()}분 이상 비교</span>
         </div>
         <div class="strength-grid">${strengthCards}</div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-header">
+          <h3>하위권 보완 지표</h3>
+          <span>좋은 쪽 하위 30% 이내 지표</span>
+        </div>
+        <div class="strength-grid weakness-grid">${weaknessCards}</div>
       </section>
 
       <section class="section-block">
@@ -408,7 +451,8 @@ function analyzePlayer(rawPlayer) {
     pool = [...pool, player];
   }
   const strengths = buildStrengths(pool, player);
-  renderReport(player, pool, strengths);
+  const weaknesses = buildWeaknesses(pool, player);
+  renderReport(player, pool, strengths, weaknesses);
   setStatus(`${player.player_name} 리포트를 표시했습니다.`);
 }
 
