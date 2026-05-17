@@ -203,16 +203,20 @@ function searchCandidates(query, limit = SEARCH_LIMIT) {
 }
 
 function formatValue(value, type) {
-  if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
+  if (!isValidNumber(value)) return "-";
   const numberValue = Number(value);
   if (type === "percent") return `${numberValue.toFixed(1)}%`;
   if (type === "raw") return numberValue.toFixed(2);
   return numberValue.toFixed(2);
 }
 
+function isValidNumber(value) {
+  return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+}
+
 function percentileFor(values, value, lowerIsBetter) {
-  const clean = values.filter((item) => Number.isFinite(Number(item))).map(Number);
-  if (!clean.length || !Number.isFinite(Number(value))) return null;
+  const clean = values.filter(isValidNumber).map(Number);
+  if (!clean.length || !isValidNumber(value)) return null;
   const count = lowerIsBetter
     ? clean.filter((item) => item >= value).length
     : clean.filter((item) => item <= value).length;
@@ -220,8 +224,8 @@ function percentileFor(values, value, lowerIsBetter) {
 }
 
 function rankFor(values, value, lowerIsBetter) {
-  const clean = values.filter((item) => Number.isFinite(Number(item))).map(Number);
-  if (!clean.length || !Number.isFinite(Number(value))) return null;
+  const clean = values.filter(isValidNumber).map(Number);
+  if (!clean.length || !isValidNumber(value)) return null;
   return lowerIsBetter
     ? clean.filter((item) => item < value).length + 1
     : clean.filter((item) => item > value).length + 1;
@@ -260,16 +264,20 @@ function comparisonPool(player, minMinutes) {
 function buildStrengths(pool, player) {
   return METRICS.map(([column, label, type, lowerIsBetter]) => {
     const value = player[column];
+    if (!isValidNumber(value)) return null;
+    if (!lowerIsBetter && type !== "raw" && Number(value) <= 0) return null;
+
     const values = pool.map((candidate) => candidate[column]);
-    const percentile = percentileFor(values, value, lowerIsBetter);
-    const rank = rankFor(values, value, lowerIsBetter);
+    const validValues = values.filter(isValidNumber);
+    const percentile = percentileFor(validValues, value, lowerIsBetter);
+    const rank = rankFor(validValues, value, lowerIsBetter);
     if (percentile === null || rank === null || percentile < 70) return null;
     return {
       label,
       value: formatValue(value, type),
       percentile,
       percentileText: `상위 ${(100 - percentile).toFixed(1)}%`,
-      rankText: `${rank}/${pool.length}`,
+      rankText: `${rank}/${validValues.length}`,
       raw: Number(value),
     };
   })
