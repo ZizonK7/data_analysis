@@ -35,7 +35,10 @@ const METRICS = [
   ["duel_win_rate", "경합 승률", "%", "percent", false],
   ["tackles_p90", "태클", "per 90", "per90", false],
   ["interceptions_p90", "인터셉트", "per 90", "per90", false],
+  ["clearances_p90", "클리어런스", "per 90", "per90", false],
   ["defensive_actions_p90", "태클+인터셉트", "per 90", "per90", false],
+  ["aerial_duels_won_p90", "공중 경합 승리", "per 90", "per90", false],
+  ["aerial_duel_win_rate", "공중 경합 승률", "%", "percent", false],
   ["errors_p90", "실수로 인한 슈팅/골", "per 90", "per90", true],
   ["fouls_committed_p90", "파울", "per 90", "per90", true],
 ];
@@ -55,9 +58,12 @@ const ATTACKING = [
 const DEFENSIVE = [
   ["tackles_p90", "태클/90", "per90"],
   ["interceptions_p90", "인터셉트/90", "per90"],
+  ["clearances_p90", "클리어런스/90", "per90"],
   ["defensive_actions_p90", "태클+인터셉트/90", "per90"],
   ["duels_won_p90", "경합 승리/90", "per90"],
   ["duel_win_rate", "경합 승률", "percent"],
+  ["aerial_duels_won_p90", "공중 경합 승리/90", "per90"],
+  ["aerial_duel_win_rate", "공중 경합 승률", "percent"],
   ["fouls_committed_p90", "파울/90", "per90"],
   ["errors_p90", "실수로 인한 슈팅/골/90", "per90"],
 ];
