@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Player Strength Finder</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="search-panel">
+        <div>
+          <p class="eyebrow">Player Rows CSV Analyzer</p>
+          <h1>선수 강점 지표 검색</h1>
+        </div>
+
+        <form id="searchForm" class="search-form">
+          <label class="field">
+            <span>선수 이름</span>
+            <input
+              id="queryInput"
+              name="query"
+              type="search"
+              value="reece james"
+              placeholder="reece, james, palmer..."
+              autocomplete="off"
+            />
+          </label>
+          <label class="field compact">
+            <span>비교군 최소 분</span>
+            <input id="minutesInput" type="number" min="1" step="50" value="900" />
+          </label>
+          <button id="analyzeButton" type="button">분석</button>
+        </form>
+
+        <div id="status" class="status">CSV를 불러오는 중입니다.</div>
+        <div id="candidates" class="candidate-list" aria-live="polite"></div>
+      </section>
+
+      <section id="report" class="report is-empty">
+        <div class="empty-state">
+          <p>선수를 검색하거나 후보를 선택하면 리포트가 표시됩니다.</p>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

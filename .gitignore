@@ -1,0 +1,11 @@
+data/
+.venv/
+__pycache__/
+*.pyc
+*.log
+server*.log
+
+# Local analysis/server helpers. GitHub Pages only needs index.html, static/, and player_rows.csv.
+*.py
+*.ps1
+*.png
